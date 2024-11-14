@@ -35,7 +35,7 @@
 # define EVP_MAX_KEY_LENGTH              64
 # define EVP_MAX_IV_LENGTH               16
 # define EVP_MAX_BLOCK_LENGTH            32
-# define EVP_MAX_AEAD_TAG_LENGTH         16
+# define EVP_MAX_AEAD_TAG_LENGTH         32
 
 # define PKCS5_SALT_LEN                  8
 /* Default PKCS#5 iteration count */
@@ -479,6 +479,7 @@ typedef struct {
 
 /* Length of tag for TLS */
 # define EVP_CHACHAPOLY_TLS_TAG_LEN                      16
+# define EVP_AEGIS_128L_TLS_TAG_LEN                      16
 
 typedef struct evp_cipher_info_st {
     const EVP_CIPHER *cipher;

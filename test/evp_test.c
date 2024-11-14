@@ -5312,5 +5312,9 @@ static int is_cipher_disabled(const char *name)
     if (HAS_CASE_PREFIX(name, "SM4"))
         return 1;
 #endif
+#ifdef OPENSSL_NO_AEGIS
+    if (HAS_CASE_PREFIX(name, "AEGIS"))
+        return 1;
+#endif
     return 0;
 }

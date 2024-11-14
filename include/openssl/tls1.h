@@ -625,6 +625,8 @@ int SSL_CTX_set_tlsext_ticket_key_evp_cb
 # define TLS1_3_CK_CHACHA20_POLY1305_SHA256               0x03001303
 # define TLS1_3_CK_AES_128_CCM_SHA256                     0x03001304
 # define TLS1_3_CK_AES_128_CCM_8_SHA256                   0x03001305
+# define TLS1_3_CK_AEGIS_256_SHA512                       0x03001306
+# define TLS1_3_CK_AEGIS_128L_SHA256                      0x03001307
 
 /* Integrity-only ciphersuites from RFC 9150 */
 # define TLS1_3_CK_SHA256_SHA256                          0x0300C0B4
@@ -711,6 +713,8 @@ int SSL_CTX_set_tlsext_ticket_key_evp_cb
 # define TLS1_3_RFC_SHA384_SHA384                        "TLS_SHA384_SHA384"
 # define TLS1_3_RFC_AES_128_CCM_SHA256                   "TLS_AES_128_CCM_SHA256"
 # define TLS1_3_RFC_AES_128_CCM_8_SHA256                 "TLS_AES_128_CCM_8_SHA256"
+# define TLS1_3_RFC_AEGIS_128L_SHA256                    "TLS_AEGIS_128L_SHA256"
+# define TLS1_3_RFC_AEGIS_256_SHA512                     "TLS_AEGIS_256_SHA512"
 # define TLS1_RFC_ECDHE_ECDSA_WITH_NULL_SHA              "TLS_ECDHE_ECDSA_WITH_NULL_SHA"
 # define TLS1_RFC_ECDHE_ECDSA_WITH_DES_192_CBC3_SHA      "TLS_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA"
 # define TLS1_RFC_ECDHE_ECDSA_WITH_AES_128_CBC_SHA       "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA"

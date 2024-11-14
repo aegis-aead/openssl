@@ -165,6 +165,8 @@ typedef struct quic_hdr_protector_st {
 #define QUIC_HDR_PROT_CIPHER_AES_128 1
 #define QUIC_HDR_PROT_CIPHER_AES_256 2
 #define QUIC_HDR_PROT_CIPHER_CHACHA 3
+#define QUIC_HDR_PROT_CIPHER_AEGIS_128L 4
+#define QUIC_HDR_PROT_CIPHER_AEGIS_128X2 5
 
 /*
  * Initialises a header protector.

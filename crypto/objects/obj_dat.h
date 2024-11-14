@@ -1350,7 +1350,7 @@ static const unsigned char so[9517] = {
     0x60,0x86,0x48,0x01,0x65,0x03,0x04,0x03,0x2E,  /* [ 9507] OBJ_SLH_DSA_SHAKE_256f_WITH_SHAKE256 */
 };
 
-#define NUM_NID 1487
+#define NUM_NID 1489
 static const ASN1_OBJECT nid_objs[NUM_NID] = {
     {"UNDEF", "undefined", NID_undef},
     {"rsadsi", "RSA Data Security, Inc.", NID_rsadsi, 6, &so[0]},
@@ -2839,11 +2839,15 @@ static const ASN1_OBJECT nid_objs[NUM_NID] = {
     {"id-hash-slh-dsa-shake-192f-with-shake256", "SLH-DSA-SHAKE-192f-WITH-SHAKE256", NID_SLH_DSA_SHAKE_192f_WITH_SHAKE256, 9, &so[9489]},
     {"id-hash-slh-dsa-shake-256s-with-shake256", "SLH-DSA-SHAKE-256s-WITH-SHAKE256", NID_SLH_DSA_SHAKE_256s_WITH_SHAKE256, 9, &so[9498]},
     {"id-hash-slh-dsa-shake-256f-with-shake256", "SLH-DSA-SHAKE-256f-WITH-SHAKE256", NID_SLH_DSA_SHAKE_256f_WITH_SHAKE256, 9, &so[9507]},
+    {"AEGIS-128L", "aegis-128l", NID_aegis_128l},
+    {"AEGIS-128X2", "aegis-128x2", NID_aegis_128x2},
 };
 
-#define NUM_SN 1478
+#define NUM_SN 1480
 static const unsigned int sn_objs[NUM_SN] = {
      364,    /* "AD_DVCS" */
+    1487,    /* "AEGIS-128L" */
+    1488,    /* "AEGIS-128X2" */
      419,    /* "AES-128-CBC" */
      916,    /* "AES-128-CBC-HMAC-SHA1" */
      948,    /* "AES-128-CBC-HMAC-SHA256" */
@@ -4323,7 +4327,7 @@ static const unsigned int sn_objs[NUM_SN] = {
     1289,    /* "zstd" */
 };
 
-#define NUM_LN 1478
+#define NUM_LN 1480
 static const unsigned int ln_objs[NUM_LN] = {
      363,    /* "AD Time Stamping" */
      405,    /* "ANSI X9.62" */
@@ -4756,6 +4760,8 @@ static const unsigned int ln_objs[NUM_LN] = {
      446,    /* "account" */
      364,    /* "ad dvcs" */
      606,    /* "additional verification" */
+    1487,    /* "aegis-128l" */
+    1488,    /* "aegis-128x2" */
      419,    /* "aes-128-cbc" */
      916,    /* "aes-128-cbc-hmac-sha1" */
      948,    /* "aes-128-cbc-hmac-sha256" */

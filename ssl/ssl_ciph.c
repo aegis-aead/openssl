@@ -62,6 +62,8 @@ static const ssl_cipher_table ssl_cipher_table_cipher[SSL_ENC_NUM_IDX] = {
     { SSL_ARIA256GCM, NID_aria_256_gcm }, /* SSL_ENC_ARIA256GCM_IDX 21 */
     { SSL_MAGMA, NID_magma_ctr_acpkm }, /* SSL_ENC_MAGMA_IDX */
     { SSL_KUZNYECHIK, NID_kuznyechik_ctr_acpkm }, /* SSL_ENC_KUZNYECHIK_IDX */
+    { SSL_AEGIS128L, NID_aegis_128l }, /* SSL_ENC_AEGIS_128L_IDX */
+    { SSL_AEGIS128X2, NID_aegis_128x2 }, /* SSL_ENC_AEGIS_128X2_IDX */
 };
 
 /* NB: make sure indices in this table matches values above */
@@ -248,6 +250,9 @@ static const SSL_CIPHER cipher_aliases[] = {
     { 0, SSL_TXT_ARIA128, NULL, 0, 0, 0, SSL_ARIA128GCM },
     { 0, SSL_TXT_ARIA256, NULL, 0, 0, 0, SSL_ARIA256GCM },
     { 0, SSL_TXT_CBC, NULL, 0, 0, 0, SSL_CBC },
+
+    {0, SSL_TXT_AEGIS_128L, NULL, 0, 0, 0, SSL_AEGIS128L},
+    {0, SSL_TXT_AEGIS_128X2, NULL, 0, 0, 0, SSL_AEGIS128X2},
 
     /* MAC aliases */
     { 0, SSL_TXT_MD5, NULL, 0, 0, 0, 0, SSL_MD5 },
@@ -1487,7 +1492,11 @@ STACK_OF(SSL_CIPHER) *ssl_create_cipher_list(SSL_CTX *ctx,
     ssl_cipher_apply_rule(0, SSL_kECDHE, 0, 0, 0, 0, 0, CIPHER_DEL, -1, &head,
         &tail);
 
-    /* Within each strength group, we prefer GCM over CHACHA... */
+    /* Within each strength group, we prefer AEGIS over GCM over CHACHA... */
+    ssl_cipher_apply_rule(0, 0, 0, SSL_AEGIS128X2, 0, 0, 0, CIPHER_ADD, -1,
+                          &head, &tail);
+    ssl_cipher_apply_rule(0, 0, 0, SSL_AEGIS128L, 0, 0, 0, CIPHER_ADD, -1,
+                          &head, &tail);
     ssl_cipher_apply_rule(0, 0, 0, SSL_AESGCM, 0, 0, 0, CIPHER_ADD, -1,
         &head, &tail);
     ssl_cipher_apply_rule(0, 0, 0, SSL_CHACHA20, 0, 0, 0, CIPHER_ADD, -1,
@@ -1836,6 +1845,12 @@ char *SSL_CIPHER_description(const SSL_CIPHER *cipher, char *buf, int len)
     case SSL_CHACHA20POLY1305:
         enc = "CHACHA20/POLY1305(256)";
         break;
+    case SSL_AEGIS128L:
+        enc = "AEGIS-128L";
+        break;
+    case SSL_AEGIS128X2:
+        enc = "AEGIS-128X2";
+        break;
     default:
         enc = "unknown";
         break;
@@ -2176,6 +2191,10 @@ int ssl_cipher_get_overhead(const SSL_CIPHER *c, size_t *mac_overhead,
         out = EVP_CCM_TLS_EXPLICIT_IV_LEN + 8;
     } else if (c->algorithm_enc & SSL_CHACHA20POLY1305) {
         out = 16;
+    } else if (c->algorithm_enc & SSL_AEGIS128L) {
+        out = EVP_AEGIS_128L_TLS_TAG_LEN;
+    } else if (c->algorithm_enc & SSL_AEGIS128X2) {
+        out = EVP_AEGIS_128X2_TLS_TAG_LEN;
     } else if (c->algorithm_mac & SSL_AEAD) {
         /* We're supposed to have handled all the AEAD modes above */
         return 0;
@@ -2250,5 +2269,7 @@ const char *OSSL_default_ciphersuites(void)
 {
     return "TLS_AES_256_GCM_SHA384:"
            "TLS_CHACHA20_POLY1305_SHA256:"
-           "TLS_AES_128_GCM_SHA256";
+           "TLS_AES_128_GCM_SHA256:"
+           "TLS_AEGIS_128L_SHA256:"
+           "TLS_AEGIS_128X2_SHA256";
 }

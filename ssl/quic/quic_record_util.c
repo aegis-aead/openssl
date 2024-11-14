@@ -212,6 +212,13 @@ static const struct suite_info suite_chacha20poly1305 = {
     ((uint64_t)1) << 36,    /* Limit as prescribed by RFC 9001 */
 };
 
+static const struct suite_info suite_aegis128l = {
+    "AEGIS-128L", "SHA256", 32, 16, 16, 16, 16,
+    QUIC_HDR_PROT_CIPHER_AEGIS_128L,
+    ((uint64_t)1) << 56,
+    ((uint64_t)1) << 48,
+};
+
 static const struct suite_info *get_suite(uint32_t suite_id)
 {
     switch (suite_id) {
@@ -221,6 +228,8 @@ static const struct suite_info *get_suite(uint32_t suite_id)
             return &suite_aes256gcm;
         case QRL_SUITE_CHACHA20POLY1305:
             return &suite_chacha20poly1305;
+        case QRL_SUITE_AEGIS128L:
+            return &suite_aegis128l;
         default:
             return NULL;
     }

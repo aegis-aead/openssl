@@ -74,6 +74,7 @@ int ossl_quic_provide_initial_secret(OSSL_LIB_CTX *libctx,
 # define QRL_SUITE_AES128GCM            1 /* SHA256 */
 # define QRL_SUITE_AES256GCM            2 /* SHA384 */
 # define QRL_SUITE_CHACHA20POLY1305     3 /* SHA256 */
+# define QRL_SUITE_AEGIS128L            4 /* SHA256 */
 
 /* Returns cipher name in bytes or NULL if suite ID is invalid. */
 const char *ossl_qrl_get_suite_cipher_name(uint32_t suite_id);

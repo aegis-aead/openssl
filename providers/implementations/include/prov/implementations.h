@@ -240,6 +240,9 @@ extern const OSSL_DISPATCH ossl_chacha20_functions[];
 # ifndef OPENSSL_NO_POLY1305
 extern const OSSL_DISPATCH ossl_chacha20_ossl_poly1305_functions[];
 # endif /* OPENSSL_NO_POLY1305 */
+# ifndef OPENSSL_NO_AEGIS
+extern const OSSL_DISPATCH ossl_aegis_128l_functions[];
+# endif /* OPENSSL_NO_POLY1305 */
 #endif /* OPENSSL_NO_CHACHA */
 
 

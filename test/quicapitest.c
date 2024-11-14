@@ -295,7 +295,10 @@ static int test_ciphersuites(void)
 #if !defined(OPENSSL_NO_CHACHA) && !defined(OPENSSL_NO_POLY1305)
         TLS1_3_CK_CHACHA20_POLY1305_SHA256,
 #endif
-        TLS1_3_CK_AES_128_GCM_SHA256
+        TLS1_3_CK_AES_128_GCM_SHA256,
+#ifndef OPENSSL_NO_AEGIS
+        TLS1_3_CK_AEGIS_128L_SHA256
+#endif
     };
     size_t i, j;
 
@@ -310,6 +313,8 @@ static int test_ciphersuites(void)
 
     for (i = 0, j = 0; i < OSSL_NELEM(cipherids); i++) {
         if (cipherids[i] == TLS1_3_CK_CHACHA20_POLY1305_SHA256 && is_fips)
+            continue;
+        if (cipherids[i] == TLS1_3_CK_AEGIS_128L_SHA256 && is_fips)
             continue;
         cipher = sk_SSL_CIPHER_value(ciphers, j++);
         if (!TEST_ptr(cipher))
@@ -341,6 +346,7 @@ static int test_cipher_find(void)
         { TLS13_AES_128_GCM_SHA256_BYTES, 1 },
         { TLS13_AES_256_GCM_SHA384_BYTES, 1 },
         { TLS13_CHACHA20_POLY1305_SHA256_BYTES, 1 },
+        { TLS13_AEGIS_128L_SHA256_BYTES, 1 },
         { TLS13_AES_128_CCM_SHA256_BYTES, 0 },
         { TLS13_AES_128_CCM_8_SHA256_BYTES, 0 },
 #if !defined(OPENSSL_NO_INTEGRITY_ONLY_CIPHERS)
@@ -554,6 +560,7 @@ static int ensure_valid_ciphers(const STACK_OF(SSL_CIPHER) *ciphers)
             case TLS1_3_CK_AES_128_GCM_SHA256:
             case TLS1_3_CK_AES_256_GCM_SHA384:
             case TLS1_3_CK_CHACHA20_POLY1305_SHA256:
+            case TLS1_3_CK_AEGIS_128L_SHA256:
                 break;
             default:
                 TEST_error("forbidden cipher: %s", SSL_CIPHER_get_name(cipher));
@@ -587,7 +594,8 @@ static int test_quic_forbidden_apis_ctx(void)
 #define QUIC_CIPHERSUITES \
     "TLS_AES_128_GCM_SHA256:"           \
     "TLS_AES_256_GCM_SHA384:"           \
-    "TLS_CHACHA20_POLY1305_SHA256"
+    "TLS_CHACHA20_POLY1305_SHA256:"     \
+    "TLS_AEGIS_128L_SHA256"
 
 #define NON_QUIC_CIPHERSUITES           \
     "TLS_AES_128_CCM_SHA256:"           \

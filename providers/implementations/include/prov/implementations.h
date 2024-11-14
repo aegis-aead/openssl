@@ -251,6 +251,11 @@ extern const OSSL_DISPATCH ossl_chacha20_ossl_poly1305_functions[];
 #endif /* OPENSSL_NO_POLY1305 */
 #endif /* OPENSSL_NO_CHACHA */
 
+#ifndef OPENSSL_NO_AEGIS
+extern const OSSL_DISPATCH ossl_aegis_128l_functions[];
+extern const OSSL_DISPATCH ossl_aegis_128x2_functions[];
+#endif /* OPENSSL_NO_AEGIS */
+
 #ifndef OPENSSL_NO_SIV
 extern const OSSL_DISPATCH ossl_aes128siv_functions[];
 extern const OSSL_DISPATCH ossl_aes192siv_functions[];

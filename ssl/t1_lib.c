@@ -2926,6 +2926,8 @@ int ssl_cipher_disabled(const SSL_CONNECTION *s, const SSL_CIPHER *c,
         case TLS1_3_CK_AES_128_GCM_SHA256:
         case TLS1_3_CK_AES_256_GCM_SHA384:
         case TLS1_3_CK_CHACHA20_POLY1305_SHA256:
+        case TLS1_3_CK_AEGIS_128L_SHA256:
+        case TLS1_3_CK_AEGIS_128X2_SHA256:
             break;
         default:
             return 1;

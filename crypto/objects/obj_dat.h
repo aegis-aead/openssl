@@ -1187,7 +1187,7 @@ static const unsigned char so[8504] = {
     0x2B,0x06,0x01,0x04,0x01,0x82,0xE4,0x25,0x01,  /* [ 8494] OBJ_id_kp_wisun_fan_device */
 };
 
-#define NUM_NID 1324
+#define NUM_NID (1324 + 1)
 static const ASN1_OBJECT nid_objs[NUM_NID] = {
     {"UNDEF", "undefined", NID_undef},
     {"rsadsi", "RSA Data Security, Inc.", NID_rsadsi, 6, &so[0]},
@@ -2513,9 +2513,10 @@ static const ASN1_OBJECT nid_objs[NUM_NID] = {
     {"id-on-hardwareModuleName", "Hardware Module Name", NID_id_on_hardwareModuleName, 8, &so[8486]},
     {"id-kp-wisun-fan-device", "Wi-SUN Alliance Field Area Network (FAN)", NID_id_kp_wisun_fan_device, 9, &so[8494]},
     {"NULL", "NULL", NID_ac_auditEntity},
+    {"AEGIS-128L", "aegis-128l", NID_aegis_128l},
 };
 
-#define NUM_SN 1315
+#define NUM_SN (1315 + 1)
 static const unsigned int sn_objs[NUM_SN] = {
      364,    /* "AD_DVCS" */
      419,    /* "AES-128-CBC" */
@@ -3832,9 +3833,10 @@ static const unsigned int sn_objs[NUM_SN] = {
      160,    /* "x509Crl" */
     1093,    /* "x509ExtAdmission" */
     1289,    /* "zstd" */
+    NUM_NID - 1,    /* "aegis-128l" */
 };
 
-#define NUM_LN 1315
+#define NUM_LN (1315 + 1)
 static const unsigned int ln_objs[NUM_LN] = {
      363,    /* "AD Time Stamping" */
      405,    /* "ANSI X9.62" */
@@ -5151,6 +5153,7 @@ static const unsigned int ln_objs[NUM_LN] = {
     1207,    /* "x942kdf" */
     1206,    /* "x963kdf" */
      125,    /* "zlib compression" */
+    NUM_NID - 1,    /* "aegis-128l" */
 };
 
 #define NUM_OBJ 1181

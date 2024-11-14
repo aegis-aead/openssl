@@ -185,6 +185,8 @@ int tls1_change_cipher_state(SSL_CONNECTION *s, int which)
     default:
         if (EVP_CIPHER_is_a(c, "CHACHA20-POLY1305")) {
             taglen = EVP_CHACHAPOLY_TLS_TAG_LEN;
+        } else if (EVP_CIPHER_is_a(c, "AEGIS-128L")) {
+            taglen = EVP_AEGIS_128L_TLS_TAG_LEN;
         } else {
             /* MAC secret size corresponds to the MAC output size */
             taglen = s->s3.tmp.new_mac_secret_size;

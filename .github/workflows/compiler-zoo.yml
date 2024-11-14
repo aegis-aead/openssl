@@ -19,9 +19,6 @@ jobs:
       matrix:
         zoo: [
           {
-            cc: gcc-7,
-            distro: ubuntu-20.04
-          }, {
             cc: gcc-8,
             distro: ubuntu-20.04
           }, {

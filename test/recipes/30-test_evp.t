@@ -135,6 +135,8 @@ push @files, qw(
 # A list of tests that only run with the default provider
 # (i.e. The algorithms are not present in the fips provider)
 my @defltfiles = qw(
+                     evpciph_aegis_128l.txt
+                     evpciph_aegis_128x2.txt
                      evpciph_aes_ocb.txt
                      evpciph_aria.txt 
                      evpciph_bf.txt

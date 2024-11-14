@@ -1317,7 +1317,7 @@ static const unsigned char so[9220] = {
     0x67,0x81,0x05,0x13,0x02,0x25,                 /* [ 9213] OBJ_tcg_tr_cat_PublicKey */
 };
 
-#define NUM_NID 1454
+#define NUM_NID (1454 + 1)
 static const ASN1_OBJECT nid_objs[NUM_NID] = {
     {"UNDEF", "undefined", NID_undef},
     {"rsadsi", "RSA Data Security, Inc.", NID_rsadsi, 6, &so[0]},
@@ -2773,9 +2773,10 @@ static const ASN1_OBJECT nid_objs[NUM_NID] = {
     {"tcg-tr-cat-platformFirmwareUpdateCompliance", "Platform Firmware Update Compliance Trait Category", NID_tcg_tr_cat_platformFirmwareUpdateCompliance, 6, &so[9201]},
     {"tcg-tr-cat-RTM", "Root of Trust of Measurement Trait Category", NID_tcg_tr_cat_RTM, 6, &so[9207]},
     {"tcg-tr-cat-PublicKey", "Public Key Trait Category", NID_tcg_tr_cat_PublicKey, 6, &so[9213]},
+    {"AEGIS-128L", "aegis-128l", NID_aegis_128l},
 };
 
-#define NUM_SN 1445
+#define NUM_SN (1445 + 1)
 static const unsigned int sn_objs[NUM_SN] = {
      364,    /* "AD_DVCS" */
      419,    /* "AES-128-CBC" */
@@ -4222,9 +4223,10 @@ static const unsigned int sn_objs[NUM_SN] = {
      160,    /* "x509Crl" */
     1093,    /* "x509ExtAdmission" */
     1289,    /* "zstd" */
+    NUM_NID - 1,    /* "aegis-128l" */
 };
 
-#define NUM_LN 1445
+#define NUM_LN (1445 + 1)
 static const unsigned int ln_objs[NUM_LN] = {
      363,    /* "AD Time Stamping" */
      405,    /* "ANSI X9.62" */
@@ -5671,6 +5673,7 @@ static const unsigned int ln_objs[NUM_LN] = {
     1207,    /* "x942kdf" */
     1206,    /* "x963kdf" */
      125,    /* "zlib compression" */
+    NUM_NID - 1,    /* "aegis-128l" */
 };
 
 #define NUM_OBJ 1311

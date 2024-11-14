@@ -113,6 +113,21 @@ static SSL_CIPHER tls13_ciphers[] = {
         SSL_HANDSHAKE_MAC_SHA256,
         64, /* CCM8 uses a short tag, so we have a low security strength */
         128,
+    }, {
+        1,
+        TLS1_3_RFC_AEGIS_128L_SHA256,
+        TLS1_3_RFC_AEGIS_128L_SHA256,
+        TLS1_3_CK_AEGIS_128L_SHA256,
+        SSL_kANY,
+        SSL_aANY,
+        SSL_AEGIS128L,
+        SSL_AEAD,
+        TLS1_3_VERSION, TLS1_3_VERSION,
+        0, 0,
+        SSL_HIGH,
+        SSL_HANDSHAKE_MAC_SHA256 | SSL_QUIC,
+        128,
+        128,
     },
 #ifndef OPENSSL_NO_INTEGRITY_ONLY_CIPHERS
     {

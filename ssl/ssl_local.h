@@ -148,6 +148,7 @@
 # define SSL_ARIA256GCM          0x00200000U
 # define SSL_MAGMA               0x00400000U
 # define SSL_KUZNYECHIK          0x00800000U
+# define SSL_AEGIS128L           0x01000000U
 
 # define SSL_AESGCM              (SSL_AES128GCM | SSL_AES256GCM)
 # define SSL_AESCCM              (SSL_AES128CCM | SSL_AES256CCM | SSL_AES128CCM8 | SSL_AES256CCM8)
@@ -159,6 +160,7 @@
 # define SSL_CBC                 (SSL_DES | SSL_3DES | SSL_RC2 | SSL_IDEA \
                                   | SSL_AES128 | SSL_AES256 | SSL_CAMELLIA128 \
                                   | SSL_CAMELLIA256 | SSL_SEED)
+# define SSL_AEGIS               (SSL_AEGIS128L)
 
 /* Bits for algorithm_mac (symmetric authentication) */
 
@@ -354,7 +356,8 @@
 # define SSL_ENC_ARIA256GCM_IDX  21
 # define SSL_ENC_MAGMA_IDX       22
 # define SSL_ENC_KUZNYECHIK_IDX  23
-# define SSL_ENC_NUM_IDX         24
+# define SSL_ENC_AEGIS128L_IDX   24
+# define SSL_ENC_NUM_IDX         (24 + 1)
 
 /*-
  * SSL_kRSA <- RSA_ENC

@@ -5308,6 +5308,10 @@
 #define LN_chacha20             "chacha20"
 #define NID_chacha20            1019
 
+#define SN_aegis_128l             "AEGIS-128L"
+#define LN_aegis_128l             "aegis-128l"
+#define NID_aegis_128l            1454
+
 #define SN_dhpublicnumber               "dhpublicnumber"
 #define LN_dhpublicnumber               "X9.42 DH"
 #define NID_dhpublicnumber              920

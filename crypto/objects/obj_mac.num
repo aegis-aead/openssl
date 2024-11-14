@@ -1451,3 +1451,4 @@ tcg_tr_cat_platformFirmwareSignatureVerification		1450
 tcg_tr_cat_platformFirmwareUpdateCompliance		1451
 tcg_tr_cat_RTM		1452
 tcg_tr_cat_PublicKey		1453
+aegis_128l		1454

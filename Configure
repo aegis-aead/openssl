@@ -416,6 +416,7 @@ my @dtls = qw(dtls1 dtls1_2);
 
 my @disablables = (
     "acvp-tests",
+    "aegis",
     "afalgeng",
     "apps",
     "argon2",
@@ -615,6 +616,7 @@ our %disabled = ( # "what"         => "comment"
 my @disable_cascades = (
     # "what"            => [ "cascade", ... ]
     "bulk"              => [ "shared", "dso",
+                             "aegis",
                              "aria", "async", "atexit", "autoload-config",
                              "blake2", "bf", "camellia", "cast", "chacha",
                              "cmac", "cms", "cmp", "comp", "ct",

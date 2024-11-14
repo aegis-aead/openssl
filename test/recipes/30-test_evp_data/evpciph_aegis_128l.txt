@@ -1,0 +1,44 @@
+#
+# Copyright 2024 The OpenSSL Project Authors. All Rights Reserved.
+#
+# Licensed under the Apache License 2.0 (the "License").  You may not use
+# this file except in compliance with the License.  You can obtain a copy
+# in the file LICENSE in the source distribution or at
+# https://www.openssl.org/source/license.html
+
+# Tests start with one of these keywords
+#       Cipher Decrypt Derive Digest Encoding KDF MAC PBE
+#       PrivPubKeyPair Sign Verify VerifyRecover
+# and continue until a blank line. Lines starting with a pound sign are ignored.
+
+Title = AEGIS-128L
+
+Cipher = AEGIS-128L
+Key = 10010000000000000000000000000000
+IV = 10000200000000000000000000000000
+Tag = abe0ece80c24868a226a35d16bdae37a
+Plaintext = 00000000000000000000000000000000
+Ciphertext = c1c0e58bd913006feba00f4b3cc3594e
+
+Cipher = AEGIS-128L
+Key = 10010000000000000000000000000000
+IV = 10000200000000000000000000000000
+Tag = c2b879a67def9d74e6c14f708bbcc9b4
+Plaintext =
+Ciphertext =
+
+Cipher = AEGIS-128L
+Key = 10010000000000000000000000000000
+IV = 10000200000000000000000000000000
+Tag = cc6f3372f6aa1bb82388d695c3962d9a
+AAD = 0001020304050607
+Plaintext = 000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f
+Ciphertext = 79d94593d8c2119d7e8fd9b8fc77845c5c077a05b2528b6ac54b563aed8efe84
+
+Cipher = AEGIS-128L
+Key = 10010000000000000000000000000000
+IV = 10000200000000000000000000000000
+Tag = 7542a745733014f9474417b337399507
+AAD = 000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20212223242526272829
+Plaintext = 101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f3031323334353637
+Ciphertext = b31052ad1cca4e291abcf2df3502e6bdb1bfd6db36798be3607b1f94d34478aa7ede7f7a990fec10

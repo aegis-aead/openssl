@@ -5517,6 +5517,18 @@
 #define LN_aes_256_cbc_hmac_sha512_etm          "aes-256-cbc-hmac-sha512-etm"
 #define NID_aes_256_cbc_hmac_sha512_etm         1495
 
+#define SN_aegis_128l           "AEGIS-128L"
+#define LN_aegis_128l           "aegis-128l"
+#define NID_aegis_128l          1501
+
+#define SN_aegis_128x2          "AEGIS-128X2"
+#define LN_aegis_128x2          "aegis-128x2"
+#define NID_aegis_128x2         1502
+
+#define SN_aegis_128x4          "AEGIS-128X4"
+#define LN_aegis_128x4          "aegis-128x4"
+#define NID_aegis_128x4         1503
+
 #define SN_dhpublicnumber               "dhpublicnumber"
 #define LN_dhpublicnumber               "X9.42 DH"
 #define NID_dhpublicnumber              920

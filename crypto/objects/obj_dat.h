@@ -1355,7 +1355,7 @@ static const unsigned char so[9571] = {
     0x2A,0x86,0x48,0x86,0xF7,0x0D,0x01,0x09,0x10,0x0D,0x03,  /* [ 9559] OBJ_id_smime_ori_kem */
 };
 
-#define NUM_NID 1501
+#define NUM_NID 1504
 static const ASN1_OBJECT nid_objs[NUM_NID] = {
     {"UNDEF", "undefined", NID_undef},
     {"rsadsi", "RSA Data Security, Inc.", NID_rsadsi, 6, &so[0]},
@@ -2858,11 +2858,17 @@ static const ASN1_OBJECT nid_objs[NUM_NID] = {
     {"id-alg-hkdf-with-sha512", "HKDF-SHA512", NID_HKDF_SHA512, 11, &so[9538]},
     {"id-smime-ori", "id-smime-ori", NID_id_smime_ori, 10, &so[9549]},
     {"id-smime-ori-kem", "id-smime-ori-kem", NID_id_smime_ori_kem, 11, &so[9559]},
+    {"AEGIS-128L", "aegis-128l", NID_aegis_128l},
+    {"AEGIS-128X2", "aegis-128x2", NID_aegis_128x2},
+    {"AEGIS-128X4", "aegis-128x4", NID_aegis_128x4},
 };
 
-#define NUM_SN 1492
+#define NUM_SN 1495
 static const unsigned int sn_objs[NUM_SN] = {
      364,    /* "AD_DVCS" */
+    1501,    /* "AEGIS-128L" */
+    1502,    /* "AEGIS-128X2" */
+    1503,    /* "AEGIS-128X4" */
      419,    /* "AES-128-CBC" */
      916,    /* "AES-128-CBC-HMAC-SHA1" */
     1487,    /* "AES-128-CBC-HMAC-SHA1-ETM" */
@@ -4356,7 +4362,7 @@ static const unsigned int sn_objs[NUM_SN] = {
     1289,    /* "zstd" */
 };
 
-#define NUM_LN 1492
+#define NUM_LN 1495
 static const unsigned int ln_objs[NUM_LN] = {
      363,    /* "AD Time Stamping" */
      405,    /* "ANSI X9.62" */
@@ -4792,6 +4798,9 @@ static const unsigned int ln_objs[NUM_LN] = {
      446,    /* "account" */
      364,    /* "ad dvcs" */
      606,    /* "additional verification" */
+    1501,    /* "aegis-128l" */
+    1502,    /* "aegis-128x2" */
+    1503,    /* "aegis-128x4" */
      419,    /* "aes-128-cbc" */
      916,    /* "aes-128-cbc-hmac-sha1" */
     1487,    /* "aes-128-cbc-hmac-sha1-etm" */

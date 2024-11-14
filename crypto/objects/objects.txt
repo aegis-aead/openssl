@@ -1737,6 +1737,9 @@ sm-scheme 104 10        : SM4-XTS             : sm4-xts
 			: AES-128-CBC-HMAC-SHA512-ETM	: aes-128-cbc-hmac-sha512-etm
 			: AES-192-CBC-HMAC-SHA512-ETM	: aes-192-cbc-hmac-sha512-etm
 			: AES-256-CBC-HMAC-SHA512-ETM	: aes-256-cbc-hmac-sha512-etm
+			: AEGIS-128L			: aegis-128l
+			: AEGIS-128X2			: aegis-128x2
+			: AEGIS-128X4			: aegis-128x4
 
 ISO-US 10046 2 1	: dhpublicnumber		: X9.42 DH
 

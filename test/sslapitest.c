@@ -4360,7 +4360,18 @@ static const char *ciphersuites[] = {
 #endif
 #if !defined(OPENSSL_NO_INTEGRITY_ONLY_CIPHERS)
     "TLS_SHA256_SHA256",
-    "TLS_SHA384_SHA384"
+    "TLS_SHA384_SHA384",
+#else
+    NULL, NULL,
+#endif
+#ifndef OPENSSL_NO_AEGIS
+    "TLS_AEGIS_128L_SHA256",
+    "TLS_AEGIS_128X2_SHA256",
+    "TLS_AEGIS_128X4_SHA256",
+#else
+    NULL,
+    NULL,
+    NULL,
 #endif
 };
 
@@ -4863,7 +4874,7 @@ static int test_early_data_psk(int idx)
 }
 
 /*
- * Test TLSv1.3 PSK can be used to send early_data with all 7 ciphersuites
+ * Test TLSv1.3 PSK can be used to send early_data with all 10 ciphersuites
  * idx == 0: Test with TLS1_3_RFC_AES_128_GCM_SHA256
  * idx == 1: Test with TLS1_3_RFC_AES_256_GCM_SHA384
  * idx == 2: Test with TLS1_3_RFC_CHACHA20_POLY1305_SHA256,
@@ -4871,6 +4882,9 @@ static int test_early_data_psk(int idx)
  * idx == 4: Test with TLS1_3_RFC_AES_128_CCM_8_SHA256
  * idx == 5: Test with TLS1_3_RFC_SHA256_SHA256
  * idx == 6: Test with TLS1_3_RFC_SHA384_SHA384
+ * idx == 7: Test with TLS1_3_RFC_AEGIS_128L_SHA256
+ * idx == 8: Test with TLS1_3_RFC_AEGIS_128X2_SHA256
+ * idx == 9: Test with TLS1_3_RFC_AEGIS_128X4_SHA256
  */
 static int test_early_data_psk_with_all_ciphers(int idx)
 {
@@ -4894,10 +4908,19 @@ static int test_early_data_psk_with_all_ciphers(int idx)
         TLS1_3_RFC_AES_128_CCM_8_SHA256,
 # if !defined(OPENSSL_NO_INTEGRITY_ONLY_CIPHERS)
         TLS1_3_RFC_SHA256_SHA256,
-        TLS1_3_RFC_SHA384_SHA384
+        TLS1_3_RFC_SHA384_SHA384,
 #else
         NULL,
-        NULL
+        NULL,
+#endif
+#ifndef OPENSSL_NO_AEGIS
+        TLS1_3_RFC_AEGIS_128L_SHA256,
+        TLS1_3_RFC_AEGIS_128X2_SHA256,
+        TLS1_3_RFC_AEGIS_128X4_SHA256,
+#else
+        NULL,
+        NULL,
+        NULL,
 #endif
     };
     const unsigned char *cipher_bytes[] = {
@@ -4912,10 +4935,19 @@ static int test_early_data_psk_with_all_ciphers(int idx)
         TLS13_AES_128_CCM_8_SHA256_BYTES,
 # if !defined(OPENSSL_NO_INTEGRITY_ONLY_CIPHERS)
         TLS13_SHA256_SHA256_BYTES,
-        TLS13_SHA384_SHA384_BYTES
+        TLS13_SHA384_SHA384_BYTES,
 #else
         NULL,
-        NULL
+        NULL,
+#endif
+#ifndef OPENSSL_NO_AEGIS
+        TLS13_AEGIS_128L_SHA256_BYTES,
+        TLS13_AEGIS_128X2_SHA256_BYTES,
+        TLS13_AEGIS_128X4_SHA256_BYTES,
+#else
+        NULL,
+        NULL,
+        NULL,
 #endif
     };
 
@@ -5889,7 +5921,11 @@ static int test_tls13_ciphersuite(int idx)
 # if !defined(OPENSSL_NO_INTEGRITY_ONLY_CIPHERS)
         /* Integrity-only cipher do not provide any confidentiality */
         { TLS1_3_RFC_SHA256_SHA256, 0, 1 },
-        { TLS1_3_RFC_SHA384_SHA384, 0, 1 }
+        { TLS1_3_RFC_SHA384_SHA384, 0, 1 },
+# endif
+# ifndef OPENSSL_NO_AEGIS
+        { TLS1_3_RFC_AEGIS_128L_SHA256, 0, 0 },
+        { TLS1_3_RFC_AEGIS_128X2_SHA256, 0, 0 },
 # endif
     };
     const char *t13_cipher = NULL;
@@ -8614,8 +8650,15 @@ static struct {
         "AES256-SHA:AES128-SHA256",
         NULL,
         "TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:"
-        "TLS_AES_128_GCM_SHA256:AES256-SHA",
-        "TLS_AES_256_GCM_SHA384:TLS_AES_128_GCM_SHA256:AES256-SHA"
+        "TLS_AES_128_GCM_SHA256:"
+#ifndef OPENSSL_NO_AEGIS
+        "TLS_AEGIS_128L_SHA256:"
+        "TLS_AEGIS_128X4_SHA256:"
+        "TLS_AEGIS_128X2_SHA256:"
+#endif
+        "AES256-SHA",
+        "TLS_AES_256_GCM_SHA384:TLS_AES_128_GCM_SHA256:"
+        "AES256-SHA"
     },
 #endif
 #ifndef OSSL_NO_USABLE_TLS1_3
@@ -14018,7 +14061,7 @@ int setup_tests(void)
     ADD_ALL_TESTS(test_early_data_skip_abort, OSSL_NELEM(ciphersuites) * 3);
     ADD_ALL_TESTS(test_early_data_not_sent, 3);
     ADD_ALL_TESTS(test_early_data_psk, 8);
-    ADD_ALL_TESTS(test_early_data_psk_with_all_ciphers, 7);
+    ADD_ALL_TESTS(test_early_data_psk_with_all_ciphers, 10);
     ADD_ALL_TESTS(test_early_data_not_expected, 3);
 # ifndef OPENSSL_NO_TLS1_2
     ADD_ALL_TESTS(test_early_data_tls1_2, 3);

@@ -162,6 +162,12 @@ quic_new_record_layer(OSSL_LIB_CTX *libctx, const char *propq, int vers,
             suite_id = QRL_SUITE_AES256GCM;
         } else if (EVP_CIPHER_is_a(ciph, "CHACHA20-POLY1305")) {
             suite_id = QRL_SUITE_CHACHA20POLY1305;
+        } else if (EVP_CIPHER_is_a(ciph, "AEGIS-128L")) {
+            suite_id = QRL_SUITE_AEGIS128L;
+        } else if (EVP_CIPHER_is_a(ciph, "AEGIS-128X2")) {
+            suite_id = QRL_SUITE_AEGIS128X2;
+        } else if (EVP_CIPHER_is_a(ciph, "AEGIS-128X4")) {
+            suite_id = QRL_SUITE_AEGIS128X4;
         } else {
             QUIC_TLS_FATAL(rl, SSL_AD_INTERNAL_ERROR, SSL_R_UNKNOWN_CIPHER_TYPE);
             goto err;

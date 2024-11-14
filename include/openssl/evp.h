@@ -35,7 +35,7 @@
 # define EVP_MAX_KEY_LENGTH              64
 # define EVP_MAX_IV_LENGTH               16
 # define EVP_MAX_BLOCK_LENGTH            32
-# define EVP_MAX_AEAD_TAG_LENGTH         16
+# define EVP_MAX_AEAD_TAG_LENGTH         32
 
 /* Maximum pipes in cipher pipelining */
 # define EVP_MAX_PIPES                   32
@@ -500,6 +500,9 @@ typedef struct {
 
 /* Length of tag for TLS */
 # define EVP_CHACHAPOLY_TLS_TAG_LEN                      16
+# define EVP_AEGIS_128L_TLS_TAG_LEN                      16
+# define EVP_AEGIS_128X2_TLS_TAG_LEN                     16
+# define EVP_AEGIS_128X4_TLS_TAG_LEN                     16
 
 typedef struct evp_cipher_info_st {
     const EVP_CIPHER *cipher;

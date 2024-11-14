@@ -30,6 +30,15 @@ int ossl_quic_hdr_protector_init(QUIC_HDR_PROTECTOR *hpr,
         case QUIC_HDR_PROT_CIPHER_CHACHA:
             cipher_name = "ChaCha20";
             break;
+        case QUIC_HDR_PROT_CIPHER_AEGIS_128L:
+            cipher_name = "AEGIS-128L";
+            break;
+        case QUIC_HDR_PROT_CIPHER_AEGIS_128X2:
+            cipher_name = "AEGIS-128X2";
+            break;
+        case QUIC_HDR_PROT_CIPHER_AEGIS_128X4:
+            cipher_name = "AEGIS-128X4";
+            break;
         default:
             ERR_raise(ERR_LIB_SSL, ERR_R_UNSUPPORTED);
             return 0;
@@ -98,6 +107,20 @@ static int hdr_generate_mask(QUIC_HDR_PROTECTOR *hpr,
         for (i = 0; i < 5; ++i)
             mask[i] = dst[i];
     } else if (hpr->cipher_id == QUIC_HDR_PROT_CIPHER_CHACHA) {
+        if (sample_len < 16) {
+            ERR_raise(ERR_LIB_SSL, ERR_R_PASSED_INVALID_ARGUMENT);
+            return 0;
+        }
+
+        if (!EVP_CipherInit_ex(hpr->cipher_ctx, NULL, NULL, NULL, sample, 1)
+            || !EVP_CipherUpdate(hpr->cipher_ctx, mask, &l,
+                                 zeroes, sizeof(zeroes))) {
+            ERR_raise(ERR_LIB_SSL, ERR_R_EVP_LIB);
+            return 0;
+        }
+    } else if (hpr->cipher_id == QUIC_HDR_PROT_CIPHER_AEGIS_128L ||
+               hpr->cipher_id == QUIC_HDR_PROT_CIPHER_AEGIS_128X2 ||
+               hpr->cipher_id == QUIC_HDR_PROT_CIPHER_AEGIS_128X4) {
         if (sample_len < 16) {
             ERR_raise(ERR_LIB_SSL, ERR_R_PASSED_INVALID_ARGUMENT);
             return 0;

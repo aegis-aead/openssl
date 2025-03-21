@@ -153,7 +153,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: config
-      uses: cross-platform-actions/action@v0.26.0
+      uses: cross-platform-actions/action@v0.27.0
       with:
         operating_system: freebsd
         version: "13.4"
@@ -162,21 +162,21 @@ jobs:
           sudo pkg install -y gcc perl5
           ./config enable-fips enable-ec_nistp_64_gcc_128 enable-md2 enable-rc5 enable-ssl3 enable-ssl3-method enable-trace
     - name: config dump
-      uses: cross-platform-actions/action@v0.26.0
+      uses: cross-platform-actions/action@v0.27.0
       with:
         operating_system: freebsd
         version: "13.4"
         shutdown_vm: false
         run: ./configdata.pm --dump
     - name: make
-      uses: cross-platform-actions/action@v0.26.0
+      uses: cross-platform-actions/action@v0.27.0
       with:
         operating_system: freebsd
         version: "13.4"
         shutdown_vm: false
         run: make -j4
     - name: make test
-      uses: cross-platform-actions/action@v0.26.0
+      uses: cross-platform-actions/action@v0.27.0
       with:
         operating_system: freebsd
         version: "13.4"

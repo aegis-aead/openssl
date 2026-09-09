@@ -60,6 +60,18 @@ Valid TLSv1.3 ciphersuite names are:
 
 =item TLS_SM4_CCM_SM3
 
+=item TLS_AEGIS_128L_SHA256
+
+=item TLS_AEGIS_128X2_SHA256
+
+=item TLS_AEGIS_128X4_SHA256
+
+=item TLS_AEGIS_256_SHA512
+
+=item TLS_AEGIS_256X2_SHA512
+
+=item TLS_AEGIS_256X4_SHA512
+
 =item TLS_SHA384_SHA384 - integrity-only
 
 =item TLS_SHA256_SHA256 - integrity-only
@@ -68,7 +80,11 @@ Valid TLSv1.3 ciphersuite names are:
 
 An empty list is permissible. The default value for this setting is:
 
-"TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256"
+"TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256:
+TLS_AEGIS_128L_SHA256:TLS_AEGIS_128X2_SHA256:TLS_AEGIS_128X4_SHA256:
+TLS_AEGIS_256_SHA512:TLS_AEGIS_256X2_SHA512:TLS_AEGIS_256X4_SHA512"
+
+This is a single string, split over several lines here.
 
 SSL_set_ciphersuites() is the same as SSL_CTX_set_ciphersuites() except it
 configures the ciphersuites for B<ssl>.

@@ -63,6 +63,12 @@ static const ssl_cipher_table ssl_cipher_table_cipher[SSL_ENC_NUM_IDX] = {
     { SSL_KUZNYECHIK, NID_kuznyechik_ctr_acpkm }, /* SSL_ENC_KUZNYECHIK_IDX 23 */
     { SSL_SM4GCM, NID_sm4_gcm }, /* SSL_ENC_SM4GCM_IDX 24 */
     { SSL_SM4CCM, NID_sm4_ccm }, /* SSL_ENC_SM4CCM_IDX 25 */
+    { SSL_AEGIS128L, NID_aegis_128l }, /* SSL_ENC_AEGIS128L_IDX 26 */
+    { SSL_AEGIS128X2, NID_aegis_128x2 }, /* SSL_ENC_AEGIS128X2_IDX 27 */
+    { SSL_AEGIS128X4, NID_aegis_128x4 }, /* SSL_ENC_AEGIS128X4_IDX 28 */
+    { SSL_AEGIS256, NID_aegis_256 }, /* SSL_ENC_AEGIS256_IDX 29 */
+    { SSL_AEGIS256X2, NID_aegis_256x2 }, /* SSL_ENC_AEGIS256X2_IDX 30 */
+    { SSL_AEGIS256X4, NID_aegis_256x4 }, /* SSL_ENC_AEGIS256X4_IDX 31 */
 };
 
 /* NB: make sure indices in this table matches values above */
@@ -245,6 +251,13 @@ static const SSL_CIPHER cipher_aliases[] = {
     { 0, SSL_TXT_ARIA128, NULL, 0, 0, 0, SSL_ARIA128GCM },
     { 0, SSL_TXT_ARIA256, NULL, 0, 0, 0, SSL_ARIA256GCM },
     { 0, SSL_TXT_CBC, NULL, 0, 0, 0, SSL_CBC },
+
+    { 0, SSL_TXT_AEGIS_128L, NULL, 0, 0, 0, SSL_AEGIS128L },
+    { 0, SSL_TXT_AEGIS_128X2, NULL, 0, 0, 0, SSL_AEGIS128X2 },
+    { 0, SSL_TXT_AEGIS_128X4, NULL, 0, 0, 0, SSL_AEGIS128X4 },
+    { 0, SSL_TXT_AEGIS_256, NULL, 0, 0, 0, SSL_AEGIS256 },
+    { 0, SSL_TXT_AEGIS_256X2, NULL, 0, 0, 0, SSL_AEGIS256X2 },
+    { 0, SSL_TXT_AEGIS_256X4, NULL, 0, 0, 0, SSL_AEGIS256X4 },
 
     /* MAC aliases */
     { 0, SSL_TXT_MD5, NULL, 0, 0, 0, 0, SSL_MD5 },
@@ -477,7 +490,10 @@ int ssl_cipher_get_evp_cipher_sn(SSL_CTX *ctx, const SSL_CIPHER *sslc,
 
             *enc = NULL;
 
-            if ((sslc->algorithm_enc & SSL_AES128_ANY) != 0)
+            /* AEGIS uses the AEGIS cipher itself here, not ECB */
+            if ((sslc->algorithm_enc & SSL_AEGIS) != 0)
+                ecbnid = ssl_cipher_table_cipher[i].nid;
+            else if ((sslc->algorithm_enc & SSL_AES128_ANY) != 0)
                 ecbnid = NID_aes_128_ecb;
             else if ((sslc->algorithm_enc & SSL_AES256_ANY) != 0)
                 ecbnid = NID_aes_256_ecb;
@@ -1502,7 +1518,19 @@ STACK_OF(SSL_CIPHER) *ssl_create_cipher_list(SSL_CTX *ctx,
     ssl_cipher_apply_rule(0, SSL_kECDHE, 0, 0, 0, 0, 0, CIPHER_DEL, -1, &head,
         &tail);
 
-    /* Within each strength group, we prefer GCM over CHACHA... */
+    /* Within each strength group, we prefer AEGIS over GCM over CHACHA... */
+    ssl_cipher_apply_rule(0, 0, 0, SSL_AEGIS256X4, 0, 0, 0, CIPHER_ADD, -1,
+        &head, &tail);
+    ssl_cipher_apply_rule(0, 0, 0, SSL_AEGIS256X2, 0, 0, 0, CIPHER_ADD, -1,
+        &head, &tail);
+    ssl_cipher_apply_rule(0, 0, 0, SSL_AEGIS256, 0, 0, 0, CIPHER_ADD, -1,
+        &head, &tail);
+    ssl_cipher_apply_rule(0, 0, 0, SSL_AEGIS128X4, 0, 0, 0, CIPHER_ADD, -1,
+        &head, &tail);
+    ssl_cipher_apply_rule(0, 0, 0, SSL_AEGIS128X2, 0, 0, 0, CIPHER_ADD, -1,
+        &head, &tail);
+    ssl_cipher_apply_rule(0, 0, 0, SSL_AEGIS128L, 0, 0, 0, CIPHER_ADD, -1,
+        &head, &tail);
     ssl_cipher_apply_rule(0, 0, 0, SSL_AESGCM, 0, 0, 0, CIPHER_ADD, -1,
         &head, &tail);
     ssl_cipher_apply_rule(0, 0, 0, SSL_CHACHA20, 0, 0, 0, CIPHER_ADD, -1,
@@ -1645,6 +1673,11 @@ STACK_OF(SSL_CIPHER) *ssl_create_cipher_list(SSL_CTX *ctx,
             i--;
             continue;
         }
+
+        /* Skip the ones DTLS can't use, like TLS_AES_128_CCM_8_SHA256 */
+        if ((ssl_method->ssl3_enc->enc_flags & SSL_ENC_FLAG_DTLS) != 0
+            && sslc->min_dtls == 0)
+            continue;
 
         if (!sk_SSL_CIPHER_push(cipherstack, sslc)) {
             OPENSSL_free(co_list);
@@ -1856,6 +1889,24 @@ char *SSL_CIPHER_description(const SSL_CIPHER *cipher, char *buf, int len)
         break;
     case SSL_SM4CCM:
         enc = "SM4CCM";
+        break;
+    case SSL_AEGIS128L:
+        enc = "AEGIS-128L";
+        break;
+    case SSL_AEGIS128X2:
+        enc = "AEGIS-128X2";
+        break;
+    case SSL_AEGIS128X4:
+        enc = "AEGIS-128X4";
+        break;
+    case SSL_AEGIS256:
+        enc = "AEGIS-256";
+        break;
+    case SSL_AEGIS256X2:
+        enc = "AEGIS-256X2";
+        break;
+    case SSL_AEGIS256X4:
+        enc = "AEGIS-256X4";
         break;
     default:
         enc = "unknown";
@@ -2207,6 +2258,8 @@ int ssl_cipher_get_overhead(const SSL_CIPHER *c, int version,
             out += EVP_CCM_TLS_EXPLICIT_IV_LEN;
     } else if (c->algorithm_enc & SSL_CHACHA20POLY1305) {
         out = 16;
+    } else if (c->algorithm_enc & SSL_AEGIS) {
+        out = EVP_AEGIS_TLS_TAG_LEN;
     } else if (c->algorithm_mac & SSL_AEAD) {
         /* We're supposed to have handled all the AEAD modes above */
         return 0;
@@ -2281,7 +2334,13 @@ const char *OSSL_default_ciphersuites(void)
 {
     return "TLS_AES_256_GCM_SHA384:"
            "TLS_CHACHA20_POLY1305_SHA256:"
-           "TLS_AES_128_GCM_SHA256";
+           "TLS_AES_128_GCM_SHA256:"
+           "TLS_AEGIS_128L_SHA256:"
+           "TLS_AEGIS_128X2_SHA256:"
+           "TLS_AEGIS_128X4_SHA256:"
+           "TLS_AEGIS_256_SHA512:"
+           "TLS_AEGIS_256X2_SHA512:"
+           "TLS_AEGIS_256X4_SHA512";
 }
 
 int ssl_cipher_list_to_bytes(SSL_CONNECTION *s, STACK_OF(SSL_CIPHER) *sk,

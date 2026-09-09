@@ -6056,14 +6056,18 @@ err:
     return testresult;
 }
 
-static int prepare_ccm_no_payload(EVP_CIPHER_CTX *ctx,
+static int prepare_aead_no_payload(EVP_CIPHER_CTX *ctx,
     const EVP_CIPHER_TEST_INFO *info)
 {
     static const unsigned char aad[] = "CCM empty-payload Final regression";
     int outlen = 0;
 
-    if (info->mode != EVP_CIPH_CCM_MODE)
+    if (info->mode != EVP_CIPH_CCM_MODE) {
+        if (strncmp(EVP_CIPHER_get0_name(info->ciph), "AEGIS-", 6) == 0)
+            return EVP_CipherUpdate(ctx, NULL, &outlen, NULL, 0) > 0
+                && outlen == 0;
         return 1;
+    }
 
     return EVP_CipherUpdate(ctx, NULL, &outlen, NULL, 0) > 0
         && EVP_CipherUpdate(ctx, NULL, &outlen, aad,
@@ -6079,6 +6083,7 @@ static int prepare_ccm_no_payload(EVP_CIPHER_CTX *ctx,
  * - the modified tag fails verification on decrypt
  * For CCM, each operation declares a zero payload length and supplies AAD, but
  * deliberately omits the payload Update that would otherwise authenticate it.
+ * AEGIS receives a zero-length Update, which must not finalize the message.
  */
 static int test_evp_oneshot_aead_zerolen(int idx)
 {
@@ -6133,8 +6138,8 @@ static int test_evp_oneshot_aead_zerolen(int idx)
         errmsg = "STREAM_INIT";
         goto err;
     }
-    if (!TEST_true(prepare_ccm_no_payload(ctx_stream, info))) {
-        errmsg = "STREAM_CCM_PREPARE";
+    if (!TEST_true(prepare_aead_no_payload(ctx_stream, info))) {
+        errmsg = "STREAM_PREPARE";
         goto err;
     }
     if (!TEST_true(EVP_EncryptFinal_ex(ctx_stream, ct, &finlen))) {
@@ -6170,8 +6175,8 @@ static int test_evp_oneshot_aead_zerolen(int idx)
         errmsg = "ONESHOT_INIT";
         goto err;
     }
-    if (!TEST_true(prepare_ccm_no_payload(ctx_oneshot, info))) {
-        errmsg = "ONESHOT_CCM_PREPARE";
+    if (!TEST_true(prepare_aead_no_payload(ctx_oneshot, info))) {
+        errmsg = "ONESHOT_PREPARE";
         goto err;
     }
     oneshot_flen = EVP_Cipher(ctx_oneshot, ct, NULL, 0);
@@ -6207,8 +6212,8 @@ static int test_evp_oneshot_aead_zerolen(int idx)
         errmsg = "DEC_SET_TAG";
         goto err;
     }
-    if (!TEST_true(prepare_ccm_no_payload(ctx_dec, info))) {
-        errmsg = "DEC_CCM_PREPARE";
+    if (!TEST_true(prepare_aead_no_payload(ctx_dec, info))) {
+        errmsg = "DEC_PREPARE";
         goto err;
     }
     dec_flen = EVP_Cipher(ctx_dec, ct, NULL, 0);
@@ -6238,8 +6243,8 @@ static int test_evp_oneshot_aead_zerolen(int idx)
         errmsg = "DEC_BAD_SET_TAG";
         goto err;
     }
-    if (!TEST_true(prepare_ccm_no_payload(ctx_dec_bad, info))) {
-        errmsg = "DEC_BAD_CCM_PREPARE";
+    if (!TEST_true(prepare_aead_no_payload(ctx_dec_bad, info))) {
+        errmsg = "DEC_BAD_PREPARE";
         goto err;
     }
     if (!TEST_int_lt(EVP_Cipher(ctx_dec_bad, ct, NULL, 0), 0)) {
@@ -6262,8 +6267,8 @@ static int test_evp_oneshot_aead_zerolen(int idx)
         errmsg = "DEC_STREAM_SET_TAG";
         goto err;
     }
-    if (!TEST_true(prepare_ccm_no_payload(ctx_dec_s, info))) {
-        errmsg = "DEC_STREAM_CCM_PREPARE";
+    if (!TEST_true(prepare_aead_no_payload(ctx_dec_s, info))) {
+        errmsg = "DEC_STREAM_PREPARE";
         goto err;
     }
     if (!TEST_true(EVP_DecryptFinal_ex(ctx_dec_s, ct, &finlen))) {
@@ -6286,8 +6291,8 @@ static int test_evp_oneshot_aead_zerolen(int idx)
         errmsg = "DEC_STREAM_BAD_SET_TAG";
         goto err;
     }
-    if (!TEST_true(prepare_ccm_no_payload(ctx_dec_s_bad, info))) {
-        errmsg = "DEC_STREAM_BAD_CCM_PREPARE";
+    if (!TEST_true(prepare_aead_no_payload(ctx_dec_s_bad, info))) {
+        errmsg = "DEC_STREAM_BAD_PREPARE";
         goto err;
     }
     if (!TEST_false(EVP_DecryptFinal_ex(ctx_dec_s_bad, ct, &finlen))) {
@@ -6309,6 +6314,43 @@ err:
     EVP_CIPHER_CTX_free(ctx_dec_s_bad);
     return testresult;
 }
+
+#ifndef OPENSSL_NO_AEGIS
+static const char *aegis_ciphers[] = {
+    "AEGIS-128L", "AEGIS-128X2", "AEGIS-128X4",
+    "AEGIS-256", "AEGIS-256X2", "AEGIS-256X4"
+};
+
+/* Without a nonce, AEGIS must fail instead of returning the plaintext */
+static int test_evp_aegis_requires_nonce(int idx)
+{
+    static const unsigned char key[32] = { 1 };
+    static const unsigned char msg[32] = "AEGIS without a nonce";
+    unsigned char out[sizeof(msg)];
+    EVP_CIPHER_CTX *ctx = NULL;
+    EVP_CIPHER *cipher = NULL;
+    int enc, outlen, testresult = 0;
+
+    if (!TEST_ptr(cipher = EVP_CIPHER_fetch(testctx, aegis_ciphers[idx],
+                      testpropq)))
+        goto err;
+    for (enc = 0; enc <= 1; enc++) {
+        EVP_CIPHER_CTX_free(ctx);
+        if (!TEST_ptr(ctx = EVP_CIPHER_CTX_new())
+            || !TEST_true(EVP_CipherInit_ex2(ctx, cipher, key, NULL, enc,
+                NULL))
+            || !TEST_false(EVP_CipherUpdate(ctx, out, &outlen, msg,
+                sizeof(msg)))
+            || !TEST_false(EVP_CipherFinal_ex(ctx, out, &outlen)))
+            goto err;
+    }
+    testresult = 1;
+err:
+    EVP_CIPHER_CTX_free(ctx);
+    EVP_CIPHER_free(cipher);
+    return testresult;
+}
+#endif /* OPENSSL_NO_AEGIS */
 
 /*
  * With AEAD ciphers, a tag is an input for decryption (the value to verify)
@@ -10190,6 +10232,9 @@ int setup_tests(void)
     ADD_ALL_TESTS(test_evp_stale_key_reinit, cipher_list_n);
     ADD_ALL_TESTS(test_evp_decrypt_roundtrip_multistep, cipher_list_n);
     ADD_ALL_TESTS(test_evp_oneshot_aead_zerolen, cipher_list_n);
+#ifndef OPENSSL_NO_AEGIS
+    ADD_ALL_TESTS(test_evp_aegis_requires_nonce, OSSL_NELEM(aegis_ciphers));
+#endif
     ADD_ALL_TESTS(test_evp_aead_tag_direction, cipher_list_n);
     ADD_ALL_TESTS(test_evp_aead_late_aad, cipher_list_n);
     ADD_ALL_TESTS(test_evp_aead_tag_reject, cipher_list_n);

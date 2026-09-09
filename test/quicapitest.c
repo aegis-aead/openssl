@@ -65,7 +65,7 @@ static int qc_init(SSL *qconn, BIO_ADDR *dst_addr);
  * Test 1: Blocking
  * Test 2: Blocking, introduce socket error, test error handling.
  */
-static int test_quic_write_read(int idx)
+static int test_quic_write_read_int(int idx, const char *ciphersuite)
 {
     SSL_CTX *cctx = NULL;
     SSL_CTX *sctx = NULL;
@@ -84,6 +84,11 @@ static int test_quic_write_read(int idx)
         return TEST_skip("Blocking tests not supported in this build");
 
     cctx = SSL_CTX_new_ex(libctx, NULL, OSSL_QUIC_client_method());
+    if (ciphersuite != NULL
+        && (!TEST_ptr(cctx)
+            || !TEST_true(SSL_CTX_set_ciphersuites(cctx, ciphersuite))))
+        goto end;
+
     for (k = 0; k < 2; k++) {
         if (!TEST_ptr(cctx)
             || !TEST_true(qtest_create_quic_objects(libctx, cctx, sctx,
@@ -100,6 +105,10 @@ static int test_quic_write_read(int idx)
             goto end;
 
         if (!TEST_true(qtest_create_quic_connection(qtserv, clientquic)))
+            goto end;
+
+        if (ciphersuite != NULL
+            && !TEST_str_eq(SSL_get_cipher_name(clientquic), ciphersuite))
             goto end;
 
         if (idx >= 1) {
@@ -223,6 +232,30 @@ end:
 
     return ret;
 }
+
+static int test_quic_write_read(int idx)
+{
+    return test_quic_write_read_int(idx, NULL);
+}
+
+#ifndef OPENSSL_NO_AEGIS
+static int test_quic_aegis_write_read(int idx)
+{
+    static const char *ciphersuites[] = {
+        TLS1_3_RFC_AEGIS_128L_SHA256,
+        TLS1_3_RFC_AEGIS_128X2_SHA256,
+        TLS1_3_RFC_AEGIS_128X4_SHA256,
+        TLS1_3_RFC_AEGIS_256_SHA512,
+        TLS1_3_RFC_AEGIS_256X2_SHA512,
+        TLS1_3_RFC_AEGIS_256X4_SHA512,
+    };
+
+    if (is_fips)
+        return TEST_skip("AEGIS is not available in the FIPS provider");
+
+    return test_quic_write_read_int(0, ciphersuites[idx]);
+}
+#endif
 
 static int test_ssl_read_key_update_mfail(void)
 {
@@ -399,7 +432,15 @@ static int test_ciphersuites(void)
 #if !defined(OPENSSL_NO_CHACHA) && !defined(OPENSSL_NO_POLY1305)
         TLS1_3_CK_CHACHA20_POLY1305_SHA256,
 #endif
-        TLS1_3_CK_AES_128_GCM_SHA256
+        TLS1_3_CK_AES_128_GCM_SHA256,
+#ifndef OPENSSL_NO_AEGIS
+        TLS1_3_CK_AEGIS_128L_SHA256,
+        TLS1_3_CK_AEGIS_128X2_SHA256,
+        TLS1_3_CK_AEGIS_128X4_SHA256,
+        TLS1_3_CK_AEGIS_256_SHA512,
+        TLS1_3_CK_AEGIS_256X2_SHA512,
+        TLS1_3_CK_AEGIS_256X4_SHA512
+#endif
     };
     size_t i;
     int j;
@@ -424,7 +465,9 @@ static int test_ciphersuites(void)
     ciphers = SSL_get_ciphers(ssl);
 
     for (i = 0, j = 0; i < OSSL_NELEM(cipherids); i++) {
-        if (cipherids[i] == TLS1_3_CK_CHACHA20_POLY1305_SHA256 && is_fips)
+        /* The FIPS provider only has the AES-GCM ciphersuites */
+        if (is_fips && cipherids[i] != TLS1_3_CK_AES_128_GCM_SHA256
+            && cipherids[i] != TLS1_3_CK_AES_256_GCM_SHA384)
             continue;
         cipher = sk_SSL_CIPHER_value(ciphers, j++);
         if (!TEST_ptr(cipher))
@@ -456,6 +499,12 @@ static int test_cipher_find(void)
         { TLS13_AES_128_GCM_SHA256_BYTES, 1 },
         { TLS13_AES_256_GCM_SHA384_BYTES, 1 },
         { TLS13_CHACHA20_POLY1305_SHA256_BYTES, 1 },
+        { TLS13_AEGIS_128L_SHA256_BYTES, 1 },
+        { TLS13_AEGIS_128X2_SHA256_BYTES, 1 },
+        { TLS13_AEGIS_128X4_SHA256_BYTES, 1 },
+        { TLS13_AEGIS_256_SHA512_BYTES, 1 },
+        { TLS13_AEGIS_256X2_SHA512_BYTES, 1 },
+        { TLS13_AEGIS_256X4_SHA512_BYTES, 1 },
         { TLS13_AES_128_CCM_SHA256_BYTES, 0 },
         { TLS13_AES_128_CCM_8_SHA256_BYTES, 0 },
 #if !defined(OPENSSL_NO_INTEGRITY_ONLY_CIPHERS)
@@ -737,6 +786,12 @@ static int ensure_valid_ciphers(const STACK_OF(SSL_CIPHER) *ciphers)
         case TLS1_3_CK_AES_128_GCM_SHA256:
         case TLS1_3_CK_AES_256_GCM_SHA384:
         case TLS1_3_CK_CHACHA20_POLY1305_SHA256:
+        case TLS1_3_CK_AEGIS_128L_SHA256:
+        case TLS1_3_CK_AEGIS_128X2_SHA256:
+        case TLS1_3_CK_AEGIS_128X4_SHA256:
+        case TLS1_3_CK_AEGIS_256_SHA512:
+        case TLS1_3_CK_AEGIS_256X2_SHA512:
+        case TLS1_3_CK_AEGIS_256X4_SHA512:
             break;
         default:
             TEST_error("forbidden cipher: %s", SSL_CIPHER_get_name(cipher));
@@ -767,10 +822,16 @@ static int test_quic_forbidden_apis_ctx(void)
     /*
      * List of ciphersuites we do and don't allow in QUIC.
      */
-#define QUIC_CIPHERSUITES     \
-    "TLS_AES_128_GCM_SHA256:" \
-    "TLS_AES_256_GCM_SHA384:" \
-    "TLS_CHACHA20_POLY1305_SHA256"
+#define QUIC_CIPHERSUITES           \
+    "TLS_AES_128_GCM_SHA256:"       \
+    "TLS_AES_256_GCM_SHA384:"       \
+    "TLS_CHACHA20_POLY1305_SHA256:" \
+    "TLS_AEGIS_128X2_SHA256:"       \
+    "TLS_AEGIS_128L_SHA256:"        \
+    "TLS_AEGIS_128X4_SHA256:"       \
+    "TLS_AEGIS_256_SHA512:"         \
+    "TLS_AEGIS_256X2_SHA512:"       \
+    "TLS_AEGIS_256X4_SHA512"
 
 #define NON_QUIC_CIPHERSUITES   \
     "TLS_AES_128_CCM_SHA256:"   \
@@ -4789,6 +4850,9 @@ int setup_tests(void)
         goto err;
 
     ADD_ALL_TESTS(test_quic_write_read, 3);
+#ifndef OPENSSL_NO_AEGIS
+    ADD_ALL_TESTS(test_quic_aegis_write_read, 6);
+#endif
     ADD_MFAIL_NO_CHECK_TEST(test_ssl_read_key_update_mfail);
     ADD_TEST(test_fin_only_blocking);
     ADD_TEST(test_ciphersuites);

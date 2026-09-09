@@ -183,7 +183,7 @@ BIO *ossl_cms_EncryptedContent_init_bio(CMS_EncryptedContentInfo *ec,
             goto err;
         }
         if ((EVP_CIPHER_get_flags(cipher) & EVP_CIPH_FLAG_AEAD_CIPHER)) {
-            if (ivlen > EVP_MAX_IV_LENGTH || ivlen < 0) {
+            if (ivlen > EVP_MAX_AEAD_ASN1_IV_LENGTH || ivlen < 0) {
                 ERR_raise(ERR_LIB_CMS, ERR_R_EVP_LIB);
                 goto err;
             }

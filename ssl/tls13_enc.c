@@ -471,6 +471,8 @@ static int derive_secret_key_and_iv(SSL_CONNECTION *s, const EVP_MD *md,
 
             if (mode == EVP_CIPH_GCM_MODE) {
                 *taglen = EVP_GCM_TLS_TAG_LEN;
+            } else if (HAS_PREFIX(EVP_CIPHER_get0_name(ciph), "AEGIS-")) {
+                *taglen = EVP_AEGIS_TLS_TAG_LEN;
             } else {
                 /* CHACHA20P-POLY1305 */
                 *taglen = EVP_CHACHAPOLY_TLS_TAG_LEN;

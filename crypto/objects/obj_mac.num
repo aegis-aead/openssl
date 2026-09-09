@@ -1501,3 +1501,9 @@ id_smime_ori_kem		1500
 id_alg_hss_lms_hashsig		1501
 id_rdna_unsigned		1502
 id_alg_unsigned		1503
+aegis_128l		1504
+aegis_128x2		1505
+aegis_128x4		1506
+aegis_256		1507
+aegis_256x2		1508
+aegis_256x4		1509

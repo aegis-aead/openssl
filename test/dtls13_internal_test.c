@@ -82,6 +82,55 @@ err:
     return 0;
 }
 
+#if !defined(OPENSSL_NO_AEGIS)
+/*
+ * From draft-denis-tls-aegis-07 appendix A.2.
+ * The key is 00 01 02 ..., and the ciphertext is the 16 bytes that follow it.
+ */
+static const struct {
+    const char *cipher;
+    unsigned char mask[5];
+} aegis_sn_vectors[] = {
+    { "AEGIS-128L", { 0x60, 0xed, 0xe1, 0xc8, 0x11 } },
+    { "AEGIS-128X2", { 0x6b, 0xf2, 0x29, 0x24, 0x72 } },
+    { "AEGIS-256", { 0x6e, 0x3a, 0x2c, 0xe2, 0x97 } },
+    { "AEGIS-256X2", { 0x7a, 0x51, 0x5c, 0xfb, 0x0c } },
+};
+
+static int test_dtls_crypt_sequence_number_aegis(int idx)
+{
+    EVP_CIPHER_CTX *ctx = NULL;
+    EVP_CIPHER *cipher = NULL;
+    unsigned char bytes[48], seq[5];
+    int i, keylen, ret = 0;
+
+    for (i = 0; i < (int)sizeof(bytes); i++)
+        bytes[i] = (unsigned char)i;
+
+    if (!TEST_ptr(cipher = EVP_CIPHER_fetch(NULL, aegis_sn_vectors[idx].cipher,
+                      NULL))
+        || !TEST_ptr(ctx = EVP_CIPHER_CTX_new())
+        || !TEST_true(EVP_CipherInit_ex(ctx, cipher, NULL, bytes, NULL, 1)))
+        goto err;
+    keylen = EVP_CIPHER_get_key_length(cipher);
+
+    /* Twice, to check that the mask doesn't depend on earlier calls */
+    for (i = 0; i < 2; i++) {
+        memset(seq, 0, sizeof(seq));
+        if (!TEST_true(dtls_crypt_sequence_number(ctx, seq, sizeof(seq),
+                bytes + keylen))
+            || !TEST_mem_eq(seq, sizeof(seq), aegis_sn_vectors[idx].mask,
+                sizeof(aegis_sn_vectors[idx].mask)))
+            goto err;
+    }
+    ret = 1;
+err:
+    EVP_CIPHER_CTX_free(ctx);
+    EVP_CIPHER_free(cipher);
+    return ret;
+}
+#endif /* !defined(OPENSSL_NO_AEGIS) */
+
 /* rfc9147 section 4.2.2 sequence number reconstruction vectors. */
 typedef struct seq_num_test_st {
     /* Zero also represents the initial empty replay window. */
@@ -2327,6 +2376,10 @@ int setup_tests(void)
         return 0;
 
     ADD_ALL_TESTS(test_dtls_crypt_sequence_number, OSSL_NELEM(cipher_names));
+#if !defined(OPENSSL_NO_AEGIS)
+    ADD_ALL_TESTS(test_dtls_crypt_sequence_number_aegis,
+        OSSL_NELEM(aegis_sn_vectors));
+#endif /* !defined(OPENSSL_NO_AEGIS) */
     ADD_ALL_TESTS(test_seq_num_reconstruction, OSSL_NELEM(seq_num_tests));
 #ifndef OPENSSL_NO_DTLS1_3
     ADD_ALL_TESTS(test_dtls13_ack_length, 4);

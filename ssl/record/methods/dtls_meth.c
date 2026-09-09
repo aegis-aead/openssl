@@ -353,6 +353,21 @@ static int dtls_rlayer_buffer_record(OSSL_RECORD_LAYER *rl, struct pqueue_st *qu
     return 1;
 }
 
+/* AEGIS ciphers have no NID, so we match them by name */
+static int sn_cipher_is_aegis(const EVP_CIPHER *cipher)
+{
+    static const char *const names[] = {
+        "AEGIS-128L", "AEGIS-128X2", "AEGIS-128X4",
+        "AEGIS-256", "AEGIS-256X2", "AEGIS-256X4"
+    };
+    size_t i;
+
+    for (i = 0; i < OSSL_NELEM(names); i++)
+        if (EVP_CIPHER_is_a(cipher, names[i]))
+            return 1;
+    return 0;
+}
+
 /* rfc9147 section 4.2.3 */
 int dtls_crypt_sequence_number(EVP_CIPHER_CTX *ctx, unsigned char *seq, size_t seqlen,
     unsigned char *rec_data)
@@ -362,6 +377,7 @@ int dtls_crypt_sequence_number(EVP_CIPHER_CTX *ctx, unsigned char *seq, size_t s
     unsigned char *in, *iv;
     size_t i;
     unsigned char zeros[16] = { 0 };
+    unsigned char nonce[EVP_MAX_IV_LENGTH] = { 0 };
 
     inlen = (int)(sizeof(mask));
 
@@ -377,6 +393,12 @@ int dtls_crypt_sequence_number(EVP_CIPHER_CTX *ctx, unsigned char *seq, size_t s
      */
     if (EVP_CIPHER_CTX_get_nid(ctx) == NID_chacha20) {
         iv = rec_data;
+        in = zeros;
+        inlen = sizeof(zeros);
+    } else if (sn_cipher_is_aegis(EVP_CIPHER_CTX_get0_cipher(ctx))) {
+        /* The start of the ciphertext is the nonce (draft-denis-tls-aegis) */
+        memcpy(nonce, rec_data, 16);
+        iv = nonce;
         in = zeros;
         inlen = sizeof(zeros);
     }

@@ -5753,6 +5753,43 @@ err:
     return testresult;
 }
 
+#ifndef OPENSSL_NO_AEGIS
+static const char *aegis_ciphers[] = {
+    "AEGIS-128L", "AEGIS-128X2", "AEGIS-128X4",
+    "AEGIS-256", "AEGIS-256X2", "AEGIS-256X4"
+};
+
+/* Without a nonce, AEGIS must fail instead of returning the plaintext */
+static int test_evp_aegis_requires_nonce(int idx)
+{
+    static const unsigned char key[32] = { 1 };
+    static const unsigned char msg[32] = "AEGIS without a nonce";
+    unsigned char out[sizeof(msg)];
+    EVP_CIPHER_CTX *ctx = NULL;
+    EVP_CIPHER *cipher = NULL;
+    int enc, outlen, testresult = 0;
+
+    if (!TEST_ptr(cipher = EVP_CIPHER_fetch(testctx, aegis_ciphers[idx],
+                      testpropq)))
+        goto err;
+    for (enc = 0; enc <= 1; enc++) {
+        EVP_CIPHER_CTX_free(ctx);
+        if (!TEST_ptr(ctx = EVP_CIPHER_CTX_new())
+            || !TEST_true(EVP_CipherInit_ex2(ctx, cipher, key, NULL, enc,
+                NULL))
+            || !TEST_false(EVP_CipherUpdate(ctx, out, &outlen, msg,
+                sizeof(msg)))
+            || !TEST_false(EVP_CipherFinal_ex(ctx, out, &outlen)))
+            goto err;
+    }
+    testresult = 1;
+err:
+    EVP_CIPHER_CTX_free(ctx);
+    EVP_CIPHER_free(cipher);
+    return testresult;
+}
+#endif /* OPENSSL_NO_AEGIS */
+
 typedef struct {
     const unsigned char *iv1;
     const unsigned char *iv2;
@@ -8520,6 +8557,9 @@ int setup_tests(void)
     ADD_ALL_TESTS(test_gcm_reinit, OSSL_NELEM(gcm_reinit_tests));
     ADD_ALL_TESTS(test_evp_updated_iv, OSSL_NELEM(evp_updated_iv_tests));
     ADD_ALL_TESTS(test_evp_final_no_tag, OSSL_NELEM(evp_final_no_tag));
+#ifndef OPENSSL_NO_AEGIS
+    ADD_ALL_TESTS(test_evp_aegis_requires_nonce, OSSL_NELEM(aegis_ciphers));
+#endif
 
     ADD_ALL_TESTS(test_ivlen_change, OSSL_NELEM(ivlen_change_ciphers));
     ADD_ALL_TESTS(test_iv_reuse, OSSL_NELEM(iv_state_ciphers));

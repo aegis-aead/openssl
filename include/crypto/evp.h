@@ -311,8 +311,11 @@ struct evp_cipher_st {
         NID_##cipher##_##keysize, keysize / 8, iv_len, cbits,                        \
         (fl) | EVP_CIPH_FLAG_DEFAULT_ASN1)
 
+/* Longest GCM or CCM nonce accepted in ASN.1 parameters (RFC 5084) */
+#define EVP_MAX_AEAD_ASN1_IV_LENGTH 16
+
 typedef struct {
-    unsigned char iv[EVP_MAX_IV_LENGTH];
+    unsigned char iv[EVP_MAX_AEAD_ASN1_IV_LENGTH];
     unsigned int iv_len;
     unsigned int tag_len;
 } evp_cipher_aead_asn1_params;

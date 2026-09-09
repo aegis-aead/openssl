@@ -3168,6 +3168,53 @@ err:
     return testresult;
 }
 
+#ifndef OPENSSL_NO_AEGIS
+/*
+ * From draft-denis-tls-aegis-07 appendix A.2.
+ * The key is 00 01 02 ..., and the sample is the 16 bytes that follow it.
+ */
+static const struct {
+    uint32_t cipher_id;
+    size_t keylen;
+    unsigned char mask[5];
+} aegis_hp_tests[] = {
+    { QUIC_HDR_PROT_CIPHER_AEGIS_128L, 16, { 0x60, 0xed, 0xe1, 0xc8, 0x11 } },
+    { QUIC_HDR_PROT_CIPHER_AEGIS_128X2, 16, { 0x6b, 0xf2, 0x29, 0x24, 0x72 } },
+    { QUIC_HDR_PROT_CIPHER_AEGIS_256, 32, { 0x6e, 0x3a, 0x2c, 0xe2, 0x97 } },
+    { QUIC_HDR_PROT_CIPHER_AEGIS_256X2, 32, { 0x7a, 0x51, 0x5c, 0xfb, 0x0c } },
+};
+
+static int test_aegis_hdr_prot_mask(int idx)
+{
+    QUIC_HDR_PROTECTOR hpr;
+    const unsigned char *mask = aegis_hp_tests[idx].mask;
+    size_t keylen = aegis_hp_tests[idx].keylen;
+    unsigned char bytes[48], pn[4] = { 0 };
+    /* Short header with a 4-byte packet number, so all of the mask is used */
+    unsigned char first_byte = 0x43;
+    size_t i;
+    int testresult = 0;
+
+    for (i = 0; i < sizeof(bytes); i++)
+        bytes[i] = (unsigned char)i;
+
+    if (!TEST_true(ossl_quic_hdr_protector_init(&hpr, NULL, NULL,
+            aegis_hp_tests[idx].cipher_id, bytes, keylen)))
+        return 0;
+
+    if (!TEST_true(ossl_quic_hdr_protector_encrypt_fields(&hpr,
+            bytes + keylen, 16, &first_byte, pn))
+        || !TEST_uint_eq(first_byte, 0x43 ^ (mask[0] & 0x1f))
+        || !TEST_mem_eq(pn, sizeof(pn), mask + 1, sizeof(pn)))
+        goto err;
+
+    testresult = 1;
+err:
+    ossl_quic_hdr_protector_cleanup(&hpr);
+    return testresult;
+}
+#endif /* OPENSSL_NO_AEGIS */
+
 #define NUM_WIRE_PKT_HDR_TESTS \
     (OSSL_NELEM(pkt_hdr_tests) * HPR_REPEAT_COUNT * HPR_CIPHER_COUNT)
 
@@ -3915,5 +3962,8 @@ int setup_tests(void)
      */
     ADD_ALL_TESTS(test_wire_pkt_hdr, NUM_WIRE_PKT_HDR_TESTS + 1);
     ADD_ALL_TESTS(test_tx_script, OSSL_NELEM(tx_scripts));
+#ifndef OPENSSL_NO_AEGIS
+    ADD_ALL_TESTS(test_aegis_hdr_prot_mask, OSSL_NELEM(aegis_hp_tests));
+#endif
     return 1;
 }

@@ -1017,6 +1017,9 @@ typedef struct cipher_data_st {
  */
 static int cipher_test_valid_fragmentation(CIPHER_DATA *cdat)
 {
+    if (HAS_CASE_PREFIX(EVP_CIPHER_get0_name(cdat->cipher), "AEGIS-"))
+        return 1;
+
     return (cdat->aead == EVP_CIPH_CCM_MODE
                || cdat->aead == EVP_CIPH_CBC_MODE
                || (cdat->aead == -1
@@ -6065,6 +6068,10 @@ static int is_cipher_disabled(const char *name)
 #endif
 #ifdef OPENSSL_NO_SM4
     if (HAS_CASE_PREFIX(name, "SM4"))
+        return 1;
+#endif
+#ifdef OPENSSL_NO_AEGIS
+    if (HAS_CASE_PREFIX(name, "AEGIS"))
         return 1;
 #endif
     return 0;

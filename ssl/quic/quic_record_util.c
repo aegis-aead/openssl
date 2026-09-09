@@ -230,6 +230,85 @@ static const struct suite_info suite_chacha20poly1305 = {
     ((uint64_t)1) << 36, /* Limit as prescribed by RFC 9001 */
 };
 
+static const struct suite_info suite_aegis128l = {
+    "AEGIS-128L",
+    "SHA256",
+    32,
+    16,
+    16,
+    16,
+    16,
+    QUIC_HDR_PROT_CIPHER_AEGIS_128L,
+    ((uint64_t)1) << 56,
+    ((uint64_t)1) << 48,
+};
+
+static const struct suite_info suite_aegis128x2 = {
+    "AEGIS-128X2",
+    "SHA256",
+    32,
+    16,
+    16,
+    16,
+    16,
+    QUIC_HDR_PROT_CIPHER_AEGIS_128X2,
+    ((uint64_t)1) << 56,
+    ((uint64_t)1) << 48,
+};
+
+/* draft-denis-tls-aegis requires a key update before 2^48 records */
+static const struct suite_info suite_aegis128x4 = {
+    "AEGIS-128X4",
+    "SHA256",
+    32,
+    16,
+    16,
+    16,
+    16,
+    QUIC_HDR_PROT_CIPHER_AEGIS_128X4,
+    ((uint64_t)1) << 48,
+    ((uint64_t)1) << 48,
+};
+
+static const struct suite_info suite_aegis256 = {
+    "AEGIS-256",
+    "SHA512",
+    64,
+    32,
+    32,
+    16,
+    32,
+    QUIC_HDR_PROT_CIPHER_AEGIS_256,
+    ((uint64_t)1) << 48,
+    ((uint64_t)1) << 48,
+};
+
+static const struct suite_info suite_aegis256x2 = {
+    "AEGIS-256X2",
+    "SHA512",
+    64,
+    32,
+    32,
+    16,
+    32,
+    QUIC_HDR_PROT_CIPHER_AEGIS_256X2,
+    ((uint64_t)1) << 48,
+    ((uint64_t)1) << 48,
+};
+
+static const struct suite_info suite_aegis256x4 = {
+    "AEGIS-256X4",
+    "SHA512",
+    64,
+    32,
+    32,
+    16,
+    32,
+    QUIC_HDR_PROT_CIPHER_AEGIS_256X4,
+    ((uint64_t)1) << 48,
+    ((uint64_t)1) << 48,
+};
+
 static const struct suite_info *get_suite(uint32_t suite_id)
 {
     switch (suite_id) {
@@ -239,6 +318,18 @@ static const struct suite_info *get_suite(uint32_t suite_id)
         return &suite_aes256gcm;
     case QRL_SUITE_CHACHA20POLY1305:
         return &suite_chacha20poly1305;
+    case QRL_SUITE_AEGIS128L:
+        return &suite_aegis128l;
+    case QRL_SUITE_AEGIS128X2:
+        return &suite_aegis128x2;
+    case QRL_SUITE_AEGIS128X4:
+        return &suite_aegis128x4;
+    case QRL_SUITE_AEGIS256:
+        return &suite_aegis256;
+    case QRL_SUITE_AEGIS256X2:
+        return &suite_aegis256x2;
+    case QRL_SUITE_AEGIS256X4:
+        return &suite_aegis256x4;
     default:
         return NULL;
     }

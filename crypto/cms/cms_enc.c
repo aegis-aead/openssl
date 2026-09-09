@@ -176,7 +176,12 @@ BIO *ossl_cms_EncryptedContent_init_bio(CMS_EncryptedContentInfo *ec,
             goto err;
         }
         if ((EVP_CIPHER_get_flags(cipher) & EVP_CIPH_FLAG_AEAD_CIPHER)) {
-            memcpy(aparams.iv, piv, ivlen);
+            if (ivlen > EVP_MAX_AEAD_ASN1_IV_LENGTH || ivlen < 0) {
+                ERR_raise(ERR_LIB_CMS, ERR_R_EVP_LIB);
+                goto err;
+            }
+            if (ivlen != 0)
+                memcpy(aparams.iv, piv, ivlen);
             aparams.iv_len = ivlen;
             aparams.tag_len = EVP_CIPHER_CTX_get_tag_length(ctx);
             if (aparams.tag_len <= 0) {

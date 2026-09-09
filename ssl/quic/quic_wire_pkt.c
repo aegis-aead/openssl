@@ -30,6 +30,24 @@ int ossl_quic_hdr_protector_init(QUIC_HDR_PROTECTOR *hpr,
     case QUIC_HDR_PROT_CIPHER_CHACHA:
         cipher_name = "ChaCha20";
         break;
+    case QUIC_HDR_PROT_CIPHER_AEGIS_128L:
+        cipher_name = "AEGIS-128L";
+        break;
+    case QUIC_HDR_PROT_CIPHER_AEGIS_128X2:
+        cipher_name = "AEGIS-128X2";
+        break;
+    case QUIC_HDR_PROT_CIPHER_AEGIS_128X4:
+        cipher_name = "AEGIS-128X4";
+        break;
+    case QUIC_HDR_PROT_CIPHER_AEGIS_256:
+        cipher_name = "AEGIS-256";
+        break;
+    case QUIC_HDR_PROT_CIPHER_AEGIS_256X2:
+        cipher_name = "AEGIS-256X2";
+        break;
+    case QUIC_HDR_PROT_CIPHER_AEGIS_256X4:
+        cipher_name = "AEGIS-256X4";
+        break;
     default:
         ERR_raise(ERR_LIB_SSL, ERR_R_UNSUPPORTED);
         return 0;
@@ -73,6 +91,21 @@ void ossl_quic_hdr_protector_cleanup(QUIC_HDR_PROTECTOR *hpr)
     hpr->cipher = NULL;
 }
 
+static int hdr_prot_cipher_is_aegis(uint32_t cipher_id)
+{
+    switch (cipher_id) {
+    case QUIC_HDR_PROT_CIPHER_AEGIS_128L:
+    case QUIC_HDR_PROT_CIPHER_AEGIS_128X2:
+    case QUIC_HDR_PROT_CIPHER_AEGIS_128X4:
+    case QUIC_HDR_PROT_CIPHER_AEGIS_256:
+    case QUIC_HDR_PROT_CIPHER_AEGIS_256X2:
+    case QUIC_HDR_PROT_CIPHER_AEGIS_256X4:
+        return 1;
+    default:
+        return 0;
+    }
+}
+
 static int hdr_generate_mask(QUIC_HDR_PROTECTOR *hpr,
     const unsigned char *sample, size_t sample_len,
     unsigned char *mask)
@@ -104,6 +137,25 @@ static int hdr_generate_mask(QUIC_HDR_PROTECTOR *hpr,
         }
 
         if (!EVP_CipherInit_ex(hpr->cipher_ctx, NULL, NULL, NULL, sample, 1)
+            || !EVP_CipherUpdate(hpr->cipher_ctx, mask, &l,
+                zeroes, sizeof(zeroes))) {
+            ERR_raise(ERR_LIB_SSL, ERR_R_EVP_LIB);
+            return 0;
+        }
+    } else if (hdr_prot_cipher_is_aegis(hpr->cipher_id)) {
+        /*
+         * The mask is AEGIS keystream, with the sample padded with zeros as
+         * the nonce (draft-denis-tls-aegis)
+         */
+        unsigned char nonce[EVP_MAX_IV_LENGTH] = { 0 };
+
+        if (sample_len < 16) {
+            ERR_raise(ERR_LIB_SSL, ERR_R_PASSED_INVALID_ARGUMENT);
+            return 0;
+        }
+        memcpy(nonce, sample, 16);
+
+        if (!EVP_CipherInit_ex(hpr->cipher_ctx, NULL, NULL, NULL, nonce, 1)
             || !EVP_CipherUpdate(hpr->cipher_ctx, mask, &l,
                 zeroes, sizeof(zeroes))) {
             ERR_raise(ERR_LIB_SSL, ERR_R_EVP_LIB);

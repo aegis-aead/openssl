@@ -211,13 +211,14 @@ int evp_cipher_get_asn1_aead_params(EVP_CIPHER_CTX *c, ASN1_TYPE *type,
 {
     int i = 0;
     long tl;
-    unsigned char iv[EVP_MAX_IV_LENGTH];
+    unsigned char iv[EVP_MAX_AEAD_ASN1_IV_LENGTH];
 
     if (type == NULL || asn1_params == NULL)
         return 0;
 
-    i = ossl_asn1_type_get_octetstring_int(type, &tl, iv, EVP_MAX_IV_LENGTH);
-    if (i <= 0 || i > EVP_MAX_IV_LENGTH)
+    i = ossl_asn1_type_get_octetstring_int(type, &tl, iv,
+        EVP_MAX_AEAD_ASN1_IV_LENGTH);
+    if (i <= 0 || i > EVP_MAX_AEAD_ASN1_IV_LENGTH)
         return -1;
 
     memcpy(asn1_params->iv, iv, i);

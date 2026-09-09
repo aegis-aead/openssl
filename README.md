@@ -22,6 +22,9 @@ and Tim J. Hudson.
 
 The official Home Page of the OpenSSL Project is [www.openssl.org].
 
+This fork adds support for the AEGIS cipher suites and is maintained at
+[https://github.com/aegis-aead/openssl](https://github.com/aegis-aead/openssl).
+
 Table of Contents
 =================
 

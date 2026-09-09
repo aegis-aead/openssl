@@ -5102,7 +5102,17 @@ static const char *ciphersuites[] = {
 #endif
 #if !defined(OPENSSL_NO_INTEGRITY_ONLY_CIPHERS)
     "tls_sha256_sha256",
-    "tls_sha384_sha384"
+    "tls_sha384_sha384",
+#else
+    NULL,
+    NULL,
+#endif
+#ifndef OPENSSL_NO_AEGIS
+    "TLS_AEGIS_128L_SHA256",
+    "TLS_AEGIS_128X2_SHA256",
+#else
+    NULL,
+    NULL,
 #endif
 };
 
@@ -5137,6 +5147,9 @@ static int early_data_skip_helper(int testdtls, int testtype, int cipher, int id
 
     if (is_fips && cipher >= 4)
         return 1;
+
+    if (testdtls && cipher >= 7)
+        return TEST_skip("AEGIS is not supported in DTLS");
 
     if (ciphersuites[cipher] == NULL)
         return TEST_skip("Cipher not supported");
@@ -5762,7 +5775,7 @@ end:
 }
 
 /*
- * Test TLSv1.3 PSK can be used to send early_data with all 7 ciphersuites
+ * Test TLSv1.3 PSK can be used to send early_data with all 9 ciphersuites
  * idx == 0: Test with TLS1_3_RFC_AES_128_GCM_SHA256
  * idx == 1: Test with TLS1_3_RFC_AES_256_GCM_SHA384
  * idx == 2: Test with TLS1_3_RFC_CHACHA20_POLY1305_SHA256,
@@ -5770,8 +5783,10 @@ end:
  * idx == 4: Test with TLS1_3_RFC_AES_128_CCM_8_SHA256
  * idx == 5: Test with TLS1_3_RFC_SHA256_SHA256
  * idx == 6: Test with TLS1_3_RFC_SHA384_SHA384
+ * idx == 7: Test with TLS1_3_RFC_AEGIS_128L_SHA256
+ * idx == 8: Test with TLS1_3_RFC_AEGIS_128X2_SHA256
  *
- * idx > 6: Tests are repeated with DTLS.
+ * idx > 8: Tests are repeated with DTLS, except for AEGIS.
  */
 static int test_early_data_psk_with_all_ciphers(int idx)
 {
@@ -5795,10 +5810,17 @@ static int test_early_data_psk_with_all_ciphers(int idx)
         TLS1_3_RFC_AES_128_CCM_8_SHA256,
 #if !defined(OPENSSL_NO_INTEGRITY_ONLY_CIPHERS)
         TLS1_3_RFC_SHA256_SHA256,
-        TLS1_3_RFC_SHA384_SHA384
+        TLS1_3_RFC_SHA384_SHA384,
 #else
         NULL,
-        NULL
+        NULL,
+#endif
+#ifndef OPENSSL_NO_AEGIS
+        TLS1_3_RFC_AEGIS_128L_SHA256,
+        TLS1_3_RFC_AEGIS_128X2_SHA256,
+#else
+        NULL,
+        NULL,
 #endif
     };
     const unsigned char *cipher_bytes[] = {
@@ -5813,16 +5835,25 @@ static int test_early_data_psk_with_all_ciphers(int idx)
         TLS13_AES_128_CCM_8_SHA256_BYTES,
 #if !defined(OPENSSL_NO_INTEGRITY_ONLY_CIPHERS)
         TLS13_SHA256_SHA256_BYTES,
-        TLS13_SHA384_SHA384_BYTES
+        TLS13_SHA384_SHA384_BYTES,
 #else
         NULL,
-        NULL
+        NULL,
+#endif
+#ifndef OPENSSL_NO_AEGIS
+        TLS13_AEGIS_128L_SHA256_BYTES,
+        TLS13_AEGIS_128X2_SHA256_BYTES,
+#else
+        NULL,
+        NULL,
 #endif
     };
-    int testdtls = idx >= 7;
+    int testdtls = idx >= OSSL_NELEM(cipher_str);
 
     if (testdtls) {
-        idx -= 7;
+        idx -= OSSL_NELEM(cipher_str);
+        if (idx >= 7)
+            return TEST_skip("AEGIS is not supported in DTLS");
 #if defined(OSSL_NO_USABLE_DTLS1_3)
         testresult = TEST_skip("No usable DTLSv1.3");
         goto end;
@@ -5837,10 +5868,10 @@ static int test_early_data_psk_with_all_ciphers(int idx)
     if (cipher_str[idx] == NULL)
         return 1;
     /*
-     * Skip ChaCha20Poly1305 and TLS_SHA{256,384}_SHA{256,384} ciphers
+     * Skip ChaCha20Poly1305, TLS_SHA{256,384}_SHA{256,384} and AEGIS ciphers
      * as currently FIPS module does not support them.
      */
-    if ((idx == 2 || idx == 5 || idx == 6) && is_fips == 1)
+    if ((idx == 2 || idx >= 5) && is_fips == 1)
         return 1;
 
     /* We always set this up with a final parameter of "2" for PSK */
@@ -6973,7 +7004,11 @@ static int test_tls13_ciphersuite(int idx)
 #if !defined(OPENSSL_NO_INTEGRITY_ONLY_CIPHERS)
         /* Integrity-only cipher do not provide any confidentiality */
         { TLS1_3_RFC_SHA256_SHA256, 0, 1 },
-        { TLS1_3_RFC_SHA384_SHA384, 0, 1 }
+        { TLS1_3_RFC_SHA384_SHA384, 0, 1 },
+#endif
+#ifndef OPENSSL_NO_AEGIS
+        { TLS1_3_RFC_AEGIS_128L_SHA256, 0, 0 },
+        { TLS1_3_RFC_AEGIS_128X2_SHA256, 0, 0 },
 #endif
     };
     const char *t13_cipher = NULL;
@@ -7051,6 +7086,11 @@ static int test_tls13_ciphersuite(int idx)
             if (is_fips && !t13_ciphers[i].fipscapable)
                 continue;
             t13_cipher = t13_ciphers[i].ciphername;
+            /* The AEGIS suites are only enabled for TLS and QUIC. */
+            if (testdtls
+                && (strcmp(t13_cipher, TLS1_3_RFC_AEGIS_128L_SHA256) == 0
+                    || strcmp(t13_cipher, TLS1_3_RFC_AEGIS_128X2_SHA256) == 0))
+                continue;
             if (!TEST_true(create_ssl_ctx_pair(libctx, smeth, cmeth, vermin, max_ver,
                     &sctx, &cctx, cert, privkey)))
                 goto end;
@@ -10442,8 +10482,14 @@ static struct {
         "AES256-SHA:AES128-SHA256",
         NULL,
         "TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:"
-        "TLS_AES_128_GCM_SHA256:AES256-SHA",
-        "TLS_AES_256_GCM_SHA384:TLS_AES_128_GCM_SHA256:AES256-SHA" },
+        "TLS_AES_128_GCM_SHA256:"
+#ifndef OPENSSL_NO_AEGIS
+        "TLS_AEGIS_128L_SHA256:"
+        "TLS_AEGIS_128X2_SHA256:"
+#endif
+        "AES256-SHA",
+        "TLS_AES_256_GCM_SHA384:TLS_AES_128_GCM_SHA256:"
+        "AES256-SHA" },
 #endif
 #ifndef OSSL_NO_USABLE_TLS1_3
     { TLS1_3_VERSION,
@@ -17073,7 +17119,7 @@ int setup_tests(void)
     ADD_ALL_TESTS(test_early_data_skip_abort, 2 * OSSL_NELEM(ciphersuites) * 3);
     ADD_ALL_TESTS(test_early_data_not_sent, 6);
     ADD_ALL_TESTS(test_early_data_psk, 16);
-    ADD_ALL_TESTS(test_early_data_psk_with_all_ciphers, 14);
+    ADD_ALL_TESTS(test_early_data_psk_with_all_ciphers, 2 * OSSL_NELEM(ciphersuites));
     ADD_ALL_TESTS(test_early_data_not_expected, 6);
 #if !defined(OSSL_NO_USABLE_TLS1_3)
     ADD_TEST(test_early_data_psk_cipher_mismatch);
